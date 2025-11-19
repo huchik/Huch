@@ -1,12 +1,113 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>Мой сайт</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<title>2D движение с Красный/Зелёный свет</title>
+<style>
+  body { margin: 0; overflow: hidden; }
+  canvas { display: block; }
+</style>
 </head>
 <body>
-  <h1>Привет, мир!</h1>
-  <p>Это мой первый сайт на GitHub Pages.</p>
+
+<canvas id="game"></canvas>
+
+<script>
+const cvs = document.getElementById("game");
+cvs.width = window.innerWidth;
+cvs.height = window.innerHeight;
+const ctx  = cvs.getContext("2d");
+
+const startLineX = 50;              
+const finishLineX = cvs.width - 65; 
+const lineWidth = 15;
+
+const background = new Image();
+background.src = "Fr.jpeg"; 
+
+const player = {
+  x: startLineX + lineWidth + 5,
+  y: cvs.height / 2,
+  speed: 0.5,
+  img: new Image(),
+  width: 64,
+  height: 64
+};
+player.img.src = "player_red.png";
+
+let keys = {};
+document.addEventListener("keydown", e => keys[e.code] = true);
+document.addEventListener("keyup",   e => keys[e.code] = false);
+
+let redLight = false;        
+let lastChange = Date.now(); 
+const interval = 5000;       
+const stopTime = 1000;       
+
+function drawLine(ctx, x, y, w, h, color) {
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, w, h);
+}
+
+function drawText(ctx, text, x, y, size = 80, color = "red") {
+  ctx.fillStyle = color;
+  ctx.font = `${size}px Arial Black`;
+  ctx.textAlign = "center";
+  ctx.fillText(text, x, y);
+}
+
+function loop(){
+  requestAnimationFrame(loop);
+
+  ctx.clearRect(0, 0, cvs.width, cvs.height);
+
+  if(background.complete) {
+    ctx.drawImage(background, 0, 0, cvs.width, cvs.height);
+  } else {
+    ctx.fillStyle = "#f7e68a";
+    ctx.fillRect(0, 0, cvs.width, cvs.height);
+  }
+
+  drawLine(ctx, startLineX, 0, lineWidth, cvs.height, "red");       
+  drawLine(ctx, finishLineX, 0, lineWidth, cvs.height, "white");    
+
+  let now = Date.now();
+  if(now - lastChange > interval){
+    redLight = !redLight;       
+    lastChange = now;
+  }
+
+  let moving = keys["KeyW"] || keys["ArrowUp"] || keys["KeyS"] || keys["ArrowDown"] ||
+               keys["KeyA"] || keys["ArrowLeft"] || keys["KeyD"] || keys["ArrowRight"];
+
+  if(redLight && moving && now - lastChange > stopTime){
+    location.reload();
+  }
+
+  if(keys["KeyW"] || keys["ArrowUp"])    player.y -= player.speed;
+  if(keys["KeyS"] || keys["ArrowDown"])  player.y += player.speed;
+  if(keys["KeyA"] || keys["ArrowLeft"])  player.x -= player.speed;
+  if(keys["KeyD"] || keys["ArrowRight"]) player.x += player.speed;
+
+  if(player.img.complete){
+    ctx.drawImage(player.img, player.x - player.width/2, player.y - player.height/2, player.width, player.height);
+  }
+
+  drawText(ctx, redLight ? "КРАСНЫЙ СВЕТ!" : "ЗЕЛЁНЫЙ СВЕТ!", cvs.width/2, 150, 100, redLight ? "red" : "green");
+
+  if(player.x + player.width/2 >= finishLineX){
+    alert("Вы выиграли!");
+    window.close();
+  }
+}
+
+loop();
+
+window.addEventListener("resize", () => {
+  cvs.width = window.innerWidth;
+  cvs.height = window.innerHeight;
+});
+</script>
+
 </body>
 </html>
